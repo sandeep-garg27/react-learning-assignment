@@ -1,16 +1,21 @@
 import React from 'react';
 
 const FilterBox = props => {
+    let options = props.options.map((option) => {
+        return (        
+            <div key={`${props.filterName}-${option}`} className="form-check">
+                <input className="form-check-input" type="checkbox" id={`${props.filterName}-${option}`} value={option} />
+                <label className="form-check-label" htmlFor={`${props.filterName}-${option}`}>{option}</label>
+            </div>
+        )
+    });
 
     return(
 
     <div className="card bg-light mb-3">
         <div className="card-header">{props.filterName}</div>
         <div className="card-body">
-        <div className="form-check">
-            <input className="form-check-input" type="checkbox" id="gridCheck1" />
-            <label className="form-check-label">test</label>
-        </div>
+            {options}    
         </div>
     </div>
     )

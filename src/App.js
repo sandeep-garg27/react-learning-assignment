@@ -15,7 +15,9 @@ class App extends React.Component {
     super();
     this.state = { 
         intialResult : [],
-        filterResult : []
+        filterResult : [],
+        filters: {},
+        searchTerm:""
       }
   }
 
@@ -28,37 +30,57 @@ class App extends React.Component {
       .then((data) => {
           this.setState({
               intialResult: data.results,
-              filterResult: data.results
-            });
+            }, this.filterResult);
       });
 
   }
 
-  updateBySearchHandler = (event) => {
-    if(event.target.value.length){
-      let searchData =  this.state.intialResult.filter(character => {
-        if(character.name.toLowerCase().includes(event.target.value.toLowerCase()))
-            return character;
-       });
-       this.setState({
-        filterResult : searchData
-      })
+  searchByNameHandler = (event) => {
+    console.log(event.target.value);
+    let searchTerm = "";
+    if(event.target.value.trim().length){
+      searchTerm = event.target.value;
     }
+
+    this.setState({searchTerm:searchTerm}, () => {this.filterResult(this.state.searchTerm, this.state.filters)});
+    
+  }
+
+  filterResult = () => {
+    let filters = {
+      "gender" : {},
+      "species" : {},
+    };
+    let searchData =  this.state.intialResult.filter(character => {
+      let searchTermConditions = true;
+
+      if(this.state.searchTerm !== null || this.state.searchTerm.trim() !== "") {
+        searchTermConditions = (character.name.toLowerCase().includes(this.state.searchTerm.toLowerCase()));
+      }
+      
+      if(searchTermConditions) {
+        filters.gender[character.gender] = character.gender;
+        filters.species[character.species] = character.species;
+        return character;
+      }
+
+      return false;
+     });
+
+     console.log(filters);
+     filters.gender = Object.values(filters.gender);
+     filters.species = Object.values(filters.species);
+
+     this.setState({
+      filterResult : searchData,
+      filters: filters
+    });
   }
 
 
-  extractFilter(label, name){
-    let filterdata = this.state.filterResult.filter(filter => {
-      return filter.species === "Human" || filter.gender === 'Female'
-
-    })
-    console.log(filterdata)
-  }
-
-  
   render(){
-    this.extractFilter();
-    console.log(this.state.filterResult)
+    //this.extractFilter();
+    //console.log(this.state.filterResult)
     
     
       return (
@@ -68,10 +90,10 @@ class App extends React.Component {
 
           <div className="row">
             <div className="col-md-4">
-                <Filter heading="example" />
+                <Filter heading="example" filters = {this.state.filters} />
             </div>
             <div className="col-md-8">
-                <Search onChangeHandler={this.updateBySearchHandler} />
+                <Search onChangeHandler={this.searchByNameHandler} />
                 <CharachterList result={this.state.filterResult} />
             </div>
 
