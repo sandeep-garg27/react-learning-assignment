@@ -6,7 +6,7 @@ class Filter extends React.Component {
         let FilterBoxes = [];
         for (let key in this.props.filters) {
             let options = this.props.filters[key];
-            FilterBoxes.push(<FilterBox key={key} filterName={key} options = {options}></FilterBox>)
+            FilterBoxes.push(<FilterBox key={key} filterName={key} options = {options} onchange={this.props.onChangeHandler}></FilterBox>)
         }
         console.log(FilterBoxes);
        return(

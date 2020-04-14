@@ -15,8 +15,9 @@ class App extends React.Component {
     super();
     this.state = { 
         intialResult : [],
-        filterResult : [],
+        filteredResult : [],
         filters: {},
+        appliedFilters:{},
         searchTerm:""
       }
   }
@@ -30,7 +31,10 @@ class App extends React.Component {
       .then((data) => {
           this.setState({
               intialResult: data.results,
-            }, this.filterResult);
+            }, ()=>{
+              this.extractFilter();
+              this.filterResult();
+            });
       });
 
   }
@@ -47,42 +51,75 @@ class App extends React.Component {
   }
 
   filterResult = () => {
-    let filters = {
-      "gender" : {},
-      "species" : {},
-    };
     let searchData =  this.state.intialResult.filter(character => {
       let searchTermConditions = true;
+      let filtersConditions = true;
 
       if(this.state.searchTerm !== null || this.state.searchTerm.trim() !== "") {
         searchTermConditions = (character.name.toLowerCase().includes(this.state.searchTerm.toLowerCase()));
       }
+
+      if (this.state.appliedFilters) {
+        if (this.state.appliedFilters.gender) {
+          filtersConditions = filtersConditions && this.state.appliedFilters.gender.includes(character.gender);
+        }
+
+        if (this.state.appliedFilters.species) {
+          filtersConditions = filtersConditions && this.state.appliedFilters.species.includes(character.species);
+        }
+      }
       
-      if(searchTermConditions) {
-        filters.gender[character.gender] = character.gender;
-        filters.species[character.species] = character.species;
+      if(searchTermConditions && filtersConditions) {
         return character;
       }
 
       return false;
      });
 
-     console.log(filters);
-     filters.gender = Object.values(filters.gender);
-     filters.species = Object.values(filters.species);
-
      this.setState({
-      filterResult : searchData,
-      filters: filters
+      filteredResult : searchData
     });
+  }
+
+  onFilterChangeHandler = (event) => {
+    console.log(event, event.target.dataset.filterCategory);
+    let filters = {
+      gender : [...this.state.appliedFilters.gender], 
+      species: [...this.state.appliedFilters.species]
+    };
+    
+    if (event.target.checked && !filters[event.target.dataset.filterCategory].includes(event.target.value)) {
+      filters[event.target.dataset.filterCategory].push(event.target.value);
+    } else {
+      filters[event.target.dataset.filterCategory].splice(filters[event.target.dataset.filterCategory].indexOf(event.target.value),1);
+    }
+    //filters["gender"].splice(0,1);
+    //this.filterResult();
+    this.setState({appliedFilters:filters}, this.filterResult);
+  }
+
+  extractFilter() {
+    console.log("called extract Filter function");
+    let filters = {
+      "gender" : {},
+      "species" : {},
+    };
+    
+    this.state.intialResult.map((character) => {
+      filters.gender[character.gender] = character.gender;
+      filters.species[character.species] = character.species;
+
+    });
+
+    filters.gender = Object.values(filters.gender);
+    filters.species = Object.values(filters.species);
+
+    this.setState({filters:filters, appliedFilters: filters});
+
   }
 
 
   render(){
-    //this.extractFilter();
-    //console.log(this.state.filterResult)
-    
-    
       return (
       <div className="App-container container-fluid">
 
@@ -90,11 +127,11 @@ class App extends React.Component {
 
           <div className="row">
             <div className="col-md-4">
-                <Filter heading="example" filters = {this.state.filters} />
+                <Filter heading="example" filters = {this.state.filters} onChangeHandler={this.onFilterChangeHandler} />
             </div>
             <div className="col-md-8">
                 <Search onChangeHandler={this.searchByNameHandler} />
-                <CharachterList result={this.state.filterResult} />
+                <CharachterList result={this.state.filteredResult} />
             </div>
 
           </div>
